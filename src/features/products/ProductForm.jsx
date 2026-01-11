@@ -6,32 +6,32 @@ import { nanoid } from "@reduxjs/toolkit";
 import { calculateMaterial, calculateProductTotal } from "../../utils/calculations";
 import MaterialRow from "./MaterialRow";
 
-export default function ProductForm() {
-  const { id } = useParams();
+export default function ProductEditor() {
+  const { id: productId } = useParams();
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const existingProduct = useSelector((state) =>
-    state.products.list.find((p) => p.id === id)
+  const existingItem = useSelector((state) =>
+    state.products.list.find((p) => p.id === productId)
   );
 
-  const [product, setProduct] = useState(
-    existingProduct || {
-      name: "",
-      unit: "kg",
-      category: "Finished",
+  const [currentProduct, setCurrentProduct] = useState(
+    existingItem || {
+      productName: "",
+      unitMeasure: "kg",
+      productCategory: "Finished",
       expiryDate: "",
-      materials: [],
+      rawMaterials: [],
     }
   );
 
-  const addMaterial = () => {
-    setProduct((prev) => ({
+  const addNewMaterial = () => {
+    setCurrentProduct((prev) => ({
       ...prev,
-      materials: [
-        ...prev.materials,
+      rawMaterials: [
+        ...prev.rawMaterials,
         {
-          materialId: nanoid(),
+          id: nanoid(),
           name: "",
           unit: "kg",
           quantity: 0,
@@ -45,23 +45,23 @@ export default function ProductForm() {
   };
 
   const updateMaterial = (index, field, value) => {
-    const updatedMaterials = [...product.materials];
-    updatedMaterials[index][field] = value;
+    const materialsCopy = [...currentProduct.rawMaterials];
+    materialsCopy[index][field] = value;
 
-    const calculated = calculateMaterial(
-      Number(updatedMaterials[index].quantity),
-      Number(updatedMaterials[index].price)
+    const calculation = calculateMaterial(
+      Number(materialsCopy[index].quantity),
+      Number(materialsCopy[index].price)
     );
 
-    updatedMaterials[index] = { ...updatedMaterials[index], ...calculated };
-    setProduct({ ...product, materials: updatedMaterials });
+    materialsCopy[index] = { ...materialsCopy[index], ...calculation };
+    setCurrentProduct({ ...currentProduct, rawMaterials: materialsCopy });
   };
 
-  const saveProduct = () => {
-    const totalCost = calculateProductTotal(product.materials);
-    const payload = { ...product, totalCost, id: existingProduct?.id || nanoid() };
+  const saveProductChanges = () => {
+    const totalCost = calculateProductTotal(currentProduct.rawMaterials);
+    const payload = { ...currentProduct, totalCost, id: existingItem?.id || nanoid() };
 
-    if (existingProduct) {
+    if (existingItem) {
       dispatch(updateProduct(payload));
     } else {
       dispatch(addProduct(payload));
@@ -71,26 +71,26 @@ export default function ProductForm() {
   };
 
   return (
-    <div className="min-h-screen p-6 bg-gray-100 space-y-8">
-      {/* Header */}
-      <div className="p-4 bg-blue-500 rounded text-white">
+    <div className="min-h-screen bg-gray-100 p-6 space-y-8">
+      <div className="bg-blue-500 p-4 rounded text-white">
         <h2 className="text-2xl font-bold">
-          {existingProduct ? "Update Product" : "Add Product"}
+          {existingItem ? "Edit Product" : "Add New Product"}
         </h2>
-        <p className="text-sm mt-1">Enter product details and raw materials</p>
+        <p className="text-sm mt-1">Fill in product details and add raw materials</p>
       </div>
 
-      {/* Product Info */}
-      <div className="p-4 bg-gray-800 rounded text-white">
-        <h3 className="mb-3 font-semibold">Product Info</h3>
+      <div className="bg-gray-800 p-4 rounded text-white">
+        <h3 className="mb-3 font-semibold">Product Details</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block mb-1 text-sm">Name</label>
             <input
               type="text"
-              value={product.name}
-              placeholder="Product name"
-              onChange={(e) => setProduct({ ...product, name: e.target.value })}
+              placeholder="Product Name"
+              value={currentProduct.productName}
+              onChange={(e) =>
+                setCurrentProduct({ ...currentProduct, productName: e.target.value })
+              }
               className="w-full px-2 py-1 rounded bg-gray-700 border border-gray-600"
             />
           </div>
@@ -98,8 +98,10 @@ export default function ProductForm() {
           <div>
             <label className="block mb-1 text-sm">Unit</label>
             <select
-              value={product.unit}
-              onChange={(e) => setProduct({ ...product, unit: e.target.value })}
+              value={currentProduct.unitMeasure}
+              onChange={(e) =>
+                setCurrentProduct({ ...currentProduct, unitMeasure: e.target.value })
+              }
               className="w-full px-2 py-1 rounded bg-gray-700 border border-gray-600"
             >
               <option>kg</option>
@@ -114,8 +116,10 @@ export default function ProductForm() {
           <div>
             <label className="block mb-1 text-sm">Category</label>
             <select
-              value={product.category}
-              onChange={(e) => setProduct({ ...product, category: e.target.value })}
+              value={currentProduct.productCategory}
+              onChange={(e) =>
+                setCurrentProduct({ ...currentProduct, productCategory: e.target.value })
+              }
               className="w-full px-2 py-1 rounded bg-gray-700 border border-gray-600"
             >
               <option>Finished</option>
@@ -125,48 +129,47 @@ export default function ProductForm() {
           </div>
 
           <div>
-            <label className="block mb-1 text-sm">Expiry</label>
+            <label className="block mb-1 text-sm">Expiry Date</label>
             <input
               type="date"
               min={new Date().toISOString().split("T")[0]}
-              value={product.expiryDate}
-              onChange={(e) => setProduct({ ...product, expiryDate: e.target.value })}
+              value={currentProduct.expiryDate}
+              onChange={(e) =>
+                setCurrentProduct({ ...currentProduct, expiryDate: e.target.value })
+              }
               className="w-full px-2 py-1 rounded bg-gray-700 border border-gray-600"
             />
           </div>
         </div>
       </div>
 
-      {/* Raw Materials */}
-      <div className="p-4 bg-gray-800 rounded text-white">
+      <div className="bg-gray-800 p-4 rounded text-white">
         <div className="flex justify-between items-center mb-3">
           <h3 className="font-semibold">Raw Materials</h3>
           <button
-            onClick={addMaterial}
+            onClick={addNewMaterial}
             className="px-3 py-1 rounded bg-blue-500 text-white"
           >
-            + Add
+            + Add Material
           </button>
         </div>
         <div className="space-y-2">
-          {product.materials.map((material, i) => (
+          {currentProduct.rawMaterials.map((material, index) => (
             <MaterialRow
-              key={material.materialId}
+              key={material.id}
               material={material}
-              index={i}
+              index={index}
               onChange={updateMaterial}
             />
           ))}
         </div>
       </div>
 
-      {/* Subtotal */}
-      <div className="p-4 bg-blue-500 rounded flex justify-between items-center text-white font-semibold">
-        <span>Subtotal</span>
-        <span>₹{calculateProductTotal(product.materials).toFixed(2)}</span>
+      <div className="bg-blue-500 p-4 rounded flex justify-between items-center text-white font-semibold">
+        <span>Total Cost</span>
+        <span>₹{calculateProductTotal(currentProduct.rawMaterials).toFixed(2)}</span>
       </div>
 
-      {/* Actions */}
       <div className="flex justify-end gap-3">
         <button
           onClick={() => navigate("/")}
@@ -175,7 +178,7 @@ export default function ProductForm() {
           Cancel
         </button>
         <button
-          onClick={saveProduct}
+          onClick={saveProductChanges}
           className="px-6 py-1 bg-blue-500 rounded text-white"
         >
           Save
