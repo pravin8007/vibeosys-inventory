@@ -47,7 +47,7 @@ export default function ProductList() {
               </td>
 
               <td className="px-5 py-3 text-gray-700">
-                {product.materials?.length || 0}
+                {product.rawMaterials.length || 0}
               </td>
             </tr>
           ))}
