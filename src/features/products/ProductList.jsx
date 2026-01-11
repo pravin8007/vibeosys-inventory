@@ -1,60 +1,53 @@
 import { useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 
-const colors = {
-  bg: "bg-slate-800",
-  border: "border-slate-600",
-  label: "text-cyan-300",
-  header: "bg-gradient-to-r from-cyan-500 to-purple-500",
-  hover: "hover:bg-slate-700",
-  link: "text-cyan-400 hover:text-cyan-200 font-medium transition-colors",
-};
-
 export default function ProductList() {
   const products = useSelector((state) => state.products.list);
 
-  if (!products.length) {
+  if (!products || products.length === 0) {
     return (
-      <div className="text-center py-12 text-slate-400">
-        <p className="text-lg">No products found. Add one to get started!</p>
+      <div className="text-center py-12 text-gray-500">
+        No products found. Add one to get started.
       </div>
     );
   }
 
   return (
-    <div className="overflow-x-auto rounded-lg shadow-md">
-      <table className="w-full border-collapse">
-        <thead>
-          <tr className={`${colors.header}`}>
-            <th className="px-6 py-4 text-left text-white font-semibold">Name</th>
-            <th className="px-6 py-4 text-left text-white font-semibold">Category</th>
-            <th className="px-6 py-4 text-left text-white font-semibold">Total Cost (₹)</th>
-            <th className="px-6 py-4 text-left text-white font-semibold">Materials</th>
+    <div className="overflow-x-auto rounded-lg border border-gray-300 bg-white">
+      <table className="w-full text-left border-collapse">
+        <thead className="bg-gray-800">
+          <tr>
+            <th className="px-5 py-3 text-white">Product Name</th>
+            <th className="px-5 py-3 text-white">Category</th>
+            <th className="px-5 py-3 text-white">Total Cost (₹)</th>
+            <th className="px-5 py-3 text-white">Materials</th>
           </tr>
         </thead>
+
         <tbody>
-          {products.map((p, i) => (
+          {products.map((product, index) => (
             <tr
-              key={p.id}
-              className={`border-b ${colors.border} ${colors.hover} transition-colors ${
-                i % 2 === 0 ? colors.bg : "bg-slate-750"
-              }`}
+              key={product.id}
+              className={`border-b ${
+                index % 2 === 0 ? "bg-gray-50" : "bg-gray-100"
+              } hover:bg-gray-200`}
             >
-              <td className="px-6 py-4">
-                <Link to={`/edit/${p.id}`} className={colors.link}>
-                  {p.name}
+              <td className="px-5 py-3 font-medium text-blue-600">
+                <Link to={`/edit/${product.id}`}>
+                  {product.productName}
                 </Link>
               </td>
-              <td className={`px-6 py-4 ${colors.label}`}>{p.category}</td>
-              <td className={`px-6 py-4 ${colors.label} font-semibold`}>
-                ₹{p.totalCost.toFixed(2)}
+
+              <td className="px-5 py-3 text-gray-700">
+                {product.productCategory || "-"}
               </td>
-              <td className="px-6 py-4">
-                <span
-                  className={`px-3 py-1 rounded-full text-sm font-medium ${colors.label} bg-slate-700`}
-                >
-                  {p.materials.length}
-                </span>
+
+              <td className="px-5 py-3 text-gray-900 font-semibold">
+                ₹{product.totalCost?.toFixed(2) || "0.00"}
+              </td>
+
+              <td className="px-5 py-3 text-gray-700">
+                {product.materials?.length || 0}
               </td>
             </tr>
           ))}
